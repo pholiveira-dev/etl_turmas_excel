@@ -1,77 +1,84 @@
 import pandas as pd
 from pathlib import Path
 
-arquivo = Path("data/alunos.xlsx")
 
-if not arquivo.exists():
-    raise FileNotFoundError(f"Arquivo não encontrado: {arquivo}")
+def carregar_dados(caminho):
+    if not caminho.exists():
+        raise FileNotFoundError(f"Arquivo não encontrado: {caminho}")
 
-abas = pd.read_excel(arquivo, sheet_name=None)
+    abas = pd.read_excel(caminho, sheet_name=None)
 
-lista_dfs = []
+    lista_dfs = []
 
-for nome_aba, df in abas.items():
+    for nome_aba, df in abas.items():
+        df = df.copy()
+        df["Grupo"] = nome_aba
+        df["Nome"] = df["Nome"].str.upper()
+        df["Nota"] = pd.to_numeric(df["Nota"], errors="coerce")
+        df["Situacao"] = df["Nota"].apply(
+            lambda x: "Aprovado" if x >= 7 else "Reprovado"
+        )
+        lista_dfs.append(df)
 
-    df = df.copy()
-
-    df["Grupo"] = nome_aba
-
-    df["Nome"] = df["Nome"].str.upper()
-
-    df["Nota"] = pd.to_numeric(df["Nota"], errors="coerce")
-
-    df["Situacao"] = df["Nota"].apply(lambda x: "Aprovado" if x >= 7 else "Reprovado")
-
-    lista_dfs.append(df)
-
-df_final = pd.concat(lista_dfs, ignore_index=True)
-
-# =============================
-# ANALISES
-# =============================
-
-total_alunos = len(df_final)
-print(f"Total de alunos: {total_alunos}")
-
-media_geral = df_final['Nota'].mean()
-print(f"Média geral: {media_geral}")
-
-media_curso = df_final.groupby("Curso")["Nota"].mean()
-print(media_curso)
-
-taxa_aprovacao = df_final['Situacao'].value_counts(normalize=True) * 100
-print(taxa_aprovacao)
-
-top_5 = df_final.sort_values("Nota", ascending=False).head(5)
-print(top_5)
+    return pd.concat(lista_dfs, ignore_index=True)
 
 
-# =============================
-# EXPORT
-# =============================
+def analisar(df):
+    total_alunos = len(df)
+    media_geral = df["Nota"].mean()
+    media_curso = df.groupby("Curso")["Nota"].mean()
+    taxa_aprovacao = df["Situacao"].value_counts(normalize=True) * 100
+    top_5 = df.sort_values("Nota", ascending=False).head(5)
 
-output_dir = Path("output")
-output_dir.mkdir(exist_ok=True)
+    print(f"\nTotal alunos: {total_alunos}")
+    print(f"Média geral: {media_geral:.2f}")
+    print("\nMédia por curso:")
+    print(media_curso)
+    print("\nTaxa aprovação:")
+    print(taxa_aprovacao)
+    print("\nTop 5:")
+    print(top_5)
 
-df_final.to_csv(output_dir / "dataset_final.csv", index=False)
-df_final.to_excel(output_dir / "dataset_final.xlsx", index=False)
+    return total_alunos, media_geral, media_curso, taxa_aprovacao, top_5
 
-media_por_curso_df = media_curso.reset_index(name="media_nota")
 
-taxa_aprovacao_df = taxa_aprovacao.reset_index()
-taxa_aprovacao_df.columns = ['Situacao', 'Percentual']
+def exportar(df, total, media, media_curso, taxa, top5):
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)
 
-top_5_df = top_5[["Nome", "Curso", "Nota"]]
+    df.to_csv(output_dir / "dataset_final.csv", index=False)
+    df.to_excel(output_dir / "dataset_final.xlsx", index=False)
 
-resumo_df = pd.DataFrame({
-    "metrica": ["total_alunos", "media_geral"],
-    "valor": [total_alunos, media_geral]
-})
+    resumo_df = pd.DataFrame({
+        "metrica": ["total_alunos", "media_geral"],
+        "valor": [total, media]
+    })
 
-with pd.ExcelWriter(output_dir / "relatorio_resumo.xlsx", engine="openpyxl") as writer:
-    resumo_df.to_excel(writer, sheet_name="Resumo Geral", index=False)
-    media_por_curso_df.to_excel(writer, sheet_name="Média por Curso", index=False)
-    taxa_aprovacao_df.to_excel(writer, sheet_name="Taxa Aprovação", index=False)
-    top_5_df.to_excel(writer, sheet_name="Top 5", index=False)
+    media_df = media_curso.reset_index(name="media_nota")
 
-print("\nArquivos exportados com sucesso em /output")
+    taxa_df = taxa.reset_index()
+    taxa_df.columns = ["Situacao", "Percentual"]
+
+    top5_df = top5[["Nome", "Curso", "Nota"]]
+
+    with pd.ExcelWriter(output_dir / "relatorio_resumo.xlsx", engine="openpyxl") as writer:
+        resumo_df.to_excel(writer, sheet_name="Resumo Geral", index=False)
+        media_df.to_excel(writer, sheet_name="Media por Curso", index=False)
+        taxa_df.to_excel(writer, sheet_name="Taxa Aprovacao", index=False)
+        top5_df.to_excel(writer, sheet_name="Top 5", index=False)
+
+
+def main():
+    arquivo = Path("data/alunos.xlsx")
+
+    df = carregar_dados(arquivo)
+
+    total, media, media_curso, taxa, top5 = analisar(df)
+
+    exportar(df, total, media, media_curso, taxa, top5)
+
+    print("\nPipeline executado com sucesso 🚀")
+
+
+if __name__ == "__main__":
+    main()
