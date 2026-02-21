@@ -8,19 +8,22 @@ if not arquivo.exists():
 
 abas = pd.read_excel(arquivo, sheet_name=None)
 
-print(f"total de abas encontradas: {len(abas)}")
-print(f"nome das abas: {list(abas.keys())}")
-print()
+lista_dfs = []
 
 for nome_aba, df in abas.items():
-    print('=' * 50)
-    print(f"Aba: {nome_aba}")
-    print("\nPrévia")
-    print(df.head())
 
-    print("\nColunas:", df.columns.tolist())
-    print("\nTipos:")
-    print(df.dtypes())
-    
-    print("\nValores faltantes:")
-    print(df.isna().sum())
+    df = df.copy()
+
+    df["Grupo"] = nome_aba
+
+    df["Nome"] = df["Nome"].str.upper()
+
+    df["Nota"] = pd.to_numeric(df["Nota"], errors="coerce")
+
+    df["Situacao"] = df["Nota"].apply(lambda x: "Aprovado" if x >= 7 else "Reprovado")
+
+    lista_dfs.append(df)
+
+df_final = pd.concat(lista_dfs, ignore_index=True)
+
+print(df_final)
