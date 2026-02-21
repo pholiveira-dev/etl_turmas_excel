@@ -26,4 +26,20 @@ for nome_aba, df in abas.items():
 
 df_final = pd.concat(lista_dfs, ignore_index=True)
 
-print(df_final)
+# Total de alunos:
+print(f"Total de alunos: {len(df)}")
+
+# Media geral
+media_geral = df['Nota'].mean()
+print(f"Média geral: {media_geral}")
+
+# Media por curso:
+media_curso = df.groupby("Curso")["Nota"].mean()
+print(media_curso)
+
+# Taxa aprovação:
+taxa_aprovacao = df['Situacao'].value_counts(normalize=True) * 100
+print(taxa_aprovacao)
+
+top_5 = df.sort_values("Nota", ascending=False).head(5)
+print(top_5)
