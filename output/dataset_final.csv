@@ -1,0 +1,13 @@
+Nome,Idade,Curso,Nota,Grupo,Situacao
+JOÃO,21,Enfermagem,8.5,Grupo1,Aprovado
+ANA,20,Nutrição,9.0,Grupo1,Aprovado
+CARLOS,22,Fisioterapia,7.8,Grupo1,Aprovado
+MARIANA,23,Enfermagem,8.8,Grupo2,Aprovado
+LUCAS,19,Nutrição,7.5,Grupo2,Aprovado
+FERNANDA,21,Fisioterapia,9.3,Grupo2,Aprovado
+RAFAEL,22,Enfermagem,6.9,Grupo3,Reprovado
+JULIANA,24,Nutrição,8.1,Grupo3,Aprovado
+BRUNO,20,Fisioterapia,7.4,Grupo3,Aprovado
+PATRICIA,21,Enfermagem,9.1,Grupo4,Aprovado
+DIEGO,23,Nutrição,6.8,Grupo4,Reprovado
+SOFIA,19,Fisioterapia,8.7,Grupo4,Aprovado
